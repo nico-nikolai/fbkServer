@@ -1,42 +1,75 @@
 const express = require('express');
+const Store = require('../models/store');
 
 const storeRouter = express.Router();
 
 storeRouter.route('/')
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next();
+.get((req, res, next) => {
+    Store.find()
+    .then(storeItems => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(storeItems);
+    })
+    .catch(err => next(err));
 })
-.get((req, res) => {
-    res.end('Will send all the store items to you');
-})
-.post((req, res) => {
-    res.end(`Will add the store items: ${req.body.name} with description: ${req.body.description}`);
+.post((req, res, next) => {
+    Store.create(req.body)
+    .then(storeItem => {
+        console.log('Store Item Created', storeItem);
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(storeItem);
+    })
+    .catch(err => next(err));
 })
 .put((req, res) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /store');
 })
-.delete((req, res) => {
-    res.end('Deleting all store items')
+.delete((req, res, next) => {
+    Store.deleteMany()
+    .then(response => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(response);
+    })
+    .catch(err => next(err));
 });
 
 storeRouter.route('/:itemId')
-.get((req, res) => {
-    res.end(`Will send details of the store item: ${req.params.itemId} to you`)
+.get((req, res, next) => {
+    Store.findById(req.params.itemId)
+    .then(item => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(item);
+    })
+    .catch(err => next(err));
 })
 .post((req, res) => {
     res.statusCode = 403;
     res.end(`POST operation not supported on /store/${req.params.itemId}`)
 })
-.put((req, res) => {
-    res.write(`Updating the store itme: ${req.params.itemId}\n`);
-    res.end(`Will update the store item: ${req.body.name}
-        with description: ${req.body.description}`)
+.put((req, res, next) => {
+    Store.findByIdAndUpdate(req.params.itemId, {
+        $set: req.body
+    }, { new: true })
+    .then(item => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(item);
+    })
+    .catch(err => next(err));
 })
-.delete((req, res) => {
-    res.end(`Deleting store item: ${req.params.itemId}`)
-})
+.delete((req, res, next) => {
+    Store.findByIdAndDelete(req.params.itemId)
+    .then(response => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(response);
+    })
+    .catch(err => next(err))
+});
 
 module.exports = storeRouter;
