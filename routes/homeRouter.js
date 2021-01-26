@@ -1,24 +1,39 @@
 const express = require('express');
+const Home = require('../models/home');
+
 const homeRouter = express.Router();
 
 homeRouter.route('/')
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next();
+.get((req, res, next) => {
+    Home.find()
+    .then(homeItems => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(homeItems)
+    })
+    .catch(err => next(err));
 })
-.get((req, res) => {
-    res.end(`Will send promotional home items to you`)
-})
-.post((req, res) => {
-    res.end(`Will add the promotional home item: ${req.body.name} with description: ${req.body.description}`);
+.post((req, res, next) => {
+    Home.create(req.body)
+    .then(homeItem => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(homeItem);
+    })
+    .catch(err => next(err));
 })
 .put((req, res) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /home');
 })
-.delete((req, res) => {
-    res.end('Deleting all promotional home content');
+.delete((req, res, next) => {
+    Home.deleteMany()
+    .then(response => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(response);
+    })
+    .catch(err => next(err));
 });
 
 module.exports = homeRouter
