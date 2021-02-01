@@ -1,5 +1,6 @@
 const express = require('express');
 const Store = require('../models/store');
+const authenticate = require('../authenticate');
 
 const storeRouter = express.Router();
 
@@ -13,7 +14,7 @@ storeRouter.route('/')
     })
     .catch(err => next(err));
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     Store.create(req.body)
     .then(storeItem => {
         console.log('Store Item Created', storeItem);
@@ -23,11 +24,11 @@ storeRouter.route('/')
     })
     .catch(err => next(err));
 })
-.put((req, res) => {
+.put(authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /store');
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     Store.deleteMany()
     .then(response => {
         res.statusCode = 200;
@@ -47,11 +48,11 @@ storeRouter.route('/:itemId')
     })
     .catch(err => next(err));
 })
-.post((req, res) => {
+.post(authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
     res.end(`POST operation not supported on /store/${req.params.itemId}`)
 })
-.put((req, res, next) => {
+.put(authenticate.verifyUser, (req, res, next) => {
     Store.findByIdAndUpdate(req.params.itemId, {
         $set: req.body
     }, { new: true })
@@ -62,7 +63,7 @@ storeRouter.route('/:itemId')
     })
     .catch(err => next(err));
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     Store.findByIdAndDelete(req.params.itemId)
     .then(response => {
         res.statusCode = 200;
@@ -88,7 +89,7 @@ storeRouter.route('/:itemId/reviews')
     })
     .catch(err => next(err));
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem) {
@@ -107,11 +108,11 @@ storeRouter.route('/:itemId/reviews')
     })
     .catch(err => next(err));
 })
-.put((req, res) => {
+.put(authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
     res.end(`PUT operation not supported on /store/${req.params.itemId}/reviews`);
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem) {
@@ -153,11 +154,11 @@ storeRouter.route('/:itemId/reviews/:reviewId')
     })
     .catch(err => next(err));
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end(`POST operation not supported on /store/${req.params.itemId}/comments/${req.params.reviewId}`);
 })
-.put((req, res, next) => {
+.put(authenticate.verifyUser, (req, res, next) => {
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem && storeItem.reviews.id(req.params.reviewId)) {
@@ -186,7 +187,7 @@ storeRouter.route('/:itemId/reviews/:reviewId')
     })
     .catch(err => next(err));
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem && storeItem.reviews.id(req.params.reviewId)) {

@@ -1,5 +1,6 @@
 const express = require('express');
 const Home = require('../models/home');
+const authenticate = require('../authenticate');
 
 const homeRouter = express.Router();
 
@@ -13,7 +14,7 @@ homeRouter.route('/')
     })
     .catch(err => next(err));
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     Home.create(req.body)
     .then(homeItem => {
         res.statusCode = 200;
@@ -22,11 +23,11 @@ homeRouter.route('/')
     })
     .catch(err => next(err));
 })
-.put((req, res) => {
+.put(authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /home');
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     Home.deleteMany()
     .then(response => {
         res.statusCode = 200;
