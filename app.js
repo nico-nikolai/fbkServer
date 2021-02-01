@@ -5,6 +5,8 @@ var path = require('path');
 var logger = require('morgan');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
+const passport = require('passport');
+const authenticate = require('./authenticate');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -12,6 +14,20 @@ const blogRouter = require('./routes/blogRouter');
 const storeRouter = require('./routes/storeRouter');
 const ourStoryRouter = require('./routes/ourStoryRouter');
 const homeRouter = require('./routes/homeRouter');
+
+const mongoose = require('mongoose')
+
+const url = 'mongodb://localhost:27017/fat-betty-knits';
+const connect = mongoose.connect(url, {
+  useCreateIndex: true,
+  useFindAndModify: false,
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+connect.then(() => console.log('Connected correctly to server'),
+  err => console.log(err)
+);
 
 var app = express();
 
@@ -32,25 +48,22 @@ app.use(session({
   store: new FileStore()
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
 function auth(req, res, next) {
-  console.log(req.session);
+  console.log(req.user);
 
-  if (!req.session.user) {
+  if (!req.user) {
       const err = new Error('You are not authenticated!');
       err.status = 401;
       return next(err);
-  } else {
-    if (req.session.user === 'authenticated') {
-      return next();
     } else {
-      const err = new Error('You are not authenticated!');
-      err.status = 401;
-      return next(err);
+      return next();
     }
-  }
 }
 
 app.use(auth);
@@ -63,19 +76,7 @@ app.use('/store', storeRouter);
 app.use('/our-story', ourStoryRouter);
 app.use('/home', homeRouter);
 
-const mongoose = require('mongoose')
 
-const url = 'mongodb://localhost:27017/fat-betty-knits';
-const connect = mongoose.connect(url, {
-  useCreateIndex: true,
-  useFindAndModify: false,
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
-
-connect.then(() => console.log('Connected correctly to server'),
-  err => console.log(err)
-);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
