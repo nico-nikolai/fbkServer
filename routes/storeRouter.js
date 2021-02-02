@@ -7,6 +7,7 @@ const storeRouter = express.Router();
 storeRouter.route('/')
 .get((req, res, next) => {
     Store.find()
+    .populate('reviews.author')
     .then(storeItems => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -41,6 +42,7 @@ storeRouter.route('/')
 storeRouter.route('/:itemId')
 .get((req, res, next) => {
     Store.findById(req.params.itemId)
+    .populate('reviews.author')
     .then(item => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -76,6 +78,7 @@ storeRouter.route('/:itemId')
 storeRouter.route('/:itemId/reviews')
 .get((req, res, next) => {
     Store.findById(req.params.itemId)
+    .populate('reviews.author')
     .then(storeItem => {
         if (storeItem) {
             res.statusCode = 200;
@@ -93,6 +96,7 @@ storeRouter.route('/:itemId/reviews')
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem) {
+            req.body.author = req.user._id;
             storeItem.reviews.push(req.body);
             storeItem.save()
             .then(storeItem => {
@@ -137,6 +141,7 @@ storeRouter.route('/:itemId/reviews')
 storeRouter.route('/:itemId/reviews/:reviewId')
 .get((req, res, next) => {
     Store.findById(req.params.itemId)
+    .populate('reviews.author')
     .then(storeItem => {
         if (storeItem && storeItem.reviews.id(req.params.reviewId)) {
             res.statusCode = 200;
