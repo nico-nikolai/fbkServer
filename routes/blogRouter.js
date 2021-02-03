@@ -14,7 +14,7 @@ blogRouter.route('/')
     })
     .catch(err => next(err));
 })
-.post(authenticate.verifyUser, (req, res, next) => {
+.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Blog.create(req.body)
     .then(blog => {
         console.log('Blog Item Created', blog);
@@ -28,7 +28,7 @@ blogRouter.route('/')
     res.statusCode = 403;
     res.end('PUT operation not supported on /blogs');
 })
-.delete(authenticate.verifyUser, (req, res, next) => {
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Blog.deleteMany()
     .then(response => {
         res.statusCode = 200;
@@ -52,7 +52,7 @@ blogRouter.route('/:blogId')
     res.statusCode = 403;
     res.end(`POST operation not supported on /blogs/${req.params.blogId}`);
 })
-.put(authenticate.verifyUser, (req, res, next) => {
+.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Blog.findByIdAndUpdate(req.params.blogId, {
         $set: req.body
     }, { new: true })
@@ -63,7 +63,7 @@ blogRouter.route('/:blogId')
     })
     .catch(err => next(err));
 })
-.delete(authenticate.verifyUser, (req, res, next) => {
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Blog.findByIdAndDelete(req.params.blogId)
     .then(response => {
         res.statusCode = 200;

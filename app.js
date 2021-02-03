@@ -2,7 +2,7 @@ var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var logger = require('morgan');
-const session = require('express-session');
+// const session = require('express-session');
 const passport = require('passport');
 const config = require('./config');
 
@@ -13,7 +13,7 @@ const storeRouter = require('./routes/storeRouter');
 const ourStoryRouter = require('./routes/ourStoryRouter');
 const homeRouter = require('./routes/homeRouter');
 
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const url = config.mongoUrl;
 const connect = mongoose.connect(url, {

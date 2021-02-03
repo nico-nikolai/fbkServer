@@ -15,7 +15,7 @@ storeRouter.route('/')
     })
     .catch(err => next(err));
 })
-.post(authenticate.verifyUser, (req, res, next) => {
+.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Store.create(req.body)
     .then(storeItem => {
         console.log('Store Item Created', storeItem);
@@ -29,7 +29,7 @@ storeRouter.route('/')
     res.statusCode = 403;
     res.end('PUT operation not supported on /store');
 })
-.delete(authenticate.verifyUser, (req, res, next) => {
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Store.deleteMany()
     .then(response => {
         res.statusCode = 200;
@@ -54,7 +54,7 @@ storeRouter.route('/:itemId')
     res.statusCode = 403;
     res.end(`POST operation not supported on /store/${req.params.itemId}`)
 })
-.put(authenticate.verifyUser, (req, res, next) => {
+.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Store.findByIdAndUpdate(req.params.itemId, {
         $set: req.body
     }, { new: true })
@@ -65,7 +65,7 @@ storeRouter.route('/:itemId')
     })
     .catch(err => next(err));
 })
-.delete(authenticate.verifyUser, (req, res, next) => {
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Store.findByIdAndDelete(req.params.itemId)
     .then(response => {
         res.statusCode = 200;
@@ -116,7 +116,7 @@ storeRouter.route('/:itemId/reviews')
     res.statusCode = 403;
     res.end(`PUT operation not supported on /store/${req.params.itemId}/reviews`);
 })
-.delete(authenticate.verifyUser, (req, res, next) => {
+.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem) {
@@ -167,19 +167,25 @@ storeRouter.route('/:itemId/reviews/:reviewId')
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem && storeItem.reviews.id(req.params.reviewId)) {
-            if (req.body.rating) {
-                storeItem.reviews.id(req.params.reviewId).rating = req.body.rating;
+            if (storeItem.reviews.id(req.params.reviewId).author.toString() === req.user._id.toString()) {
+                if (req.body.rating) {
+                    storeItem.reviews.id(req.params.reviewId).rating = req.body.rating;
+                }
+                if (req.body.text) {
+                    storeItem.reviews.id(req.params.reviewId).text = req.body.text;
+                }
+                storeItem.save()
+                .then(item => {
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json(item);
+                })
+                .catch(err => next(err));
+            } else {
+                const err = new Error('You are not authorized to update this comment!');
+                err.status = 403;
+                return next(err);
             }
-            if (req.body.text) {
-                storeItem.reviews.id(req.params.reviewId).text = req.body.text;
-            }
-            storeItem.save()
-            .then(item => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(item);
-            })
-            .catch(err => next(err));
         } else if (!storeItem) {
             err = new Error(`Store Item ${req.params.itemId} not found`);
             err.status = 404;
@@ -196,14 +202,20 @@ storeRouter.route('/:itemId/reviews/:reviewId')
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem && storeItem.reviews.id(req.params.reviewId)) {
-            storeItem.reviews.id(req.params.reviewId).remove();
-            storeItem.save()
-            .then(item => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(item);
-            })
-            .catch(err => next(err));
+            if (storeItem.reviews.id(req.params.reviewId).author.toString() === req.user._id.toString()) {
+                storeItem.reviews.id(req.params.reviewId).remove();
+                storeItem.save()
+                .then(item => {
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json(item);
+                })
+                .catch(err => next(err));
+            } else {
+                const err = new Error('You are not authorized to delete this review!');
+                err.status = 403;
+                return next(err);
+            }
         } else if (!storeItem) {
             err = new Error(`Store Item ${req.params.itemId} not found`);
             err.status = 404;
