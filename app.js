@@ -12,6 +12,7 @@ const blogRouter = require('./routes/blogRouter');
 const storeRouter = require('./routes/storeRouter');
 const ourStoryRouter = require('./routes/ourStoryRouter');
 const homeRouter = require('./routes/homeRouter');
+const uploadRouter = require('./routes/uploadRouter');
 
 const mongoose = require('mongoose');
 
@@ -59,7 +60,7 @@ app.use('/blogs', blogRouter);
 app.use('/store', storeRouter);
 app.use('/our-story', ourStoryRouter);
 app.use('/home', homeRouter);
-
+app.use('/imageUpload', uploadRouter);
 
 
 // catch 404 and forward to error handler
