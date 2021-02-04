@@ -1,11 +1,13 @@
 const express = require('express');
 const Store = require('../models/store');
 const authenticate = require('../authenticate');
+const cors = require('./cors');
 
 const storeRouter = express.Router();
 
 storeRouter.route('/')
-.get((req, res, next) => {
+.options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+.get(cors.cors, (req, res, next) => {
     Store.find()
     .populate('reviews.author')
     .then(storeItems => {
@@ -15,7 +17,7 @@ storeRouter.route('/')
     })
     .catch(err => next(err));
 })
-.post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+.post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Store.create(req.body)
     .then(storeItem => {
         console.log('Store Item Created', storeItem);
@@ -25,11 +27,11 @@ storeRouter.route('/')
     })
     .catch(err => next(err));
 })
-.put(authenticate.verifyUser, (req, res) => {
+.put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /store');
 })
-.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+.delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Store.deleteMany()
     .then(response => {
         res.statusCode = 200;
@@ -40,7 +42,8 @@ storeRouter.route('/')
 });
 
 storeRouter.route('/:itemId')
-.get((req, res, next) => {
+.options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+.get(cors.cors, (req, res, next) => {
     Store.findById(req.params.itemId)
     .populate('reviews.author')
     .then(item => {
@@ -50,11 +53,11 @@ storeRouter.route('/:itemId')
     })
     .catch(err => next(err));
 })
-.post(authenticate.verifyUser, (req, res) => {
+.post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
     res.statusCode = 403;
     res.end(`POST operation not supported on /store/${req.params.itemId}`)
 })
-.put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+.put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Store.findByIdAndUpdate(req.params.itemId, {
         $set: req.body
     }, { new: true })
@@ -65,7 +68,7 @@ storeRouter.route('/:itemId')
     })
     .catch(err => next(err));
 })
-.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+.delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Store.findByIdAndDelete(req.params.itemId)
     .then(response => {
         res.statusCode = 200;
@@ -76,7 +79,8 @@ storeRouter.route('/:itemId')
 });
 
 storeRouter.route('/:itemId/reviews')
-.get((req, res, next) => {
+.options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+.get(cors.cors, (req, res, next) => {
     Store.findById(req.params.itemId)
     .populate('reviews.author')
     .then(storeItem => {
@@ -92,7 +96,7 @@ storeRouter.route('/:itemId/reviews')
     })
     .catch(err => next(err));
 })
-.post(authenticate.verifyUser, (req, res, next) => {
+.post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem) {
@@ -112,11 +116,11 @@ storeRouter.route('/:itemId/reviews')
     })
     .catch(err => next(err));
 })
-.put(authenticate.verifyUser, (req, res) => {
+.put(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
     res.end(`PUT operation not supported on /store/${req.params.itemId}/reviews`);
 })
-.delete(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+.delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem) {
@@ -139,7 +143,8 @@ storeRouter.route('/:itemId/reviews')
 });
 
 storeRouter.route('/:itemId/reviews/:reviewId')
-.get((req, res, next) => {
+.options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+.get(cors.cors, (req, res, next) => {
     Store.findById(req.params.itemId)
     .populate('reviews.author')
     .then(storeItem => {
@@ -159,11 +164,11 @@ storeRouter.route('/:itemId/reviews/:reviewId')
     })
     .catch(err => next(err));
 })
-.post(authenticate.verifyUser, (req, res, next) => {
+.post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     res.statusCode = 403;
     res.end(`POST operation not supported on /store/${req.params.itemId}/comments/${req.params.reviewId}`);
 })
-.put(authenticate.verifyUser, (req, res, next) => {
+.put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem && storeItem.reviews.id(req.params.reviewId)) {
@@ -198,7 +203,7 @@ storeRouter.route('/:itemId/reviews/:reviewId')
     })
     .catch(err => next(err));
 })
-.delete(authenticate.verifyUser, (req, res, next) => {
+.delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     Store.findById(req.params.itemId)
     .then(storeItem => {
         if (storeItem && storeItem.reviews.id(req.params.reviewId)) {

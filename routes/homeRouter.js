@@ -1,11 +1,13 @@
 const express = require('express');
 const Home = require('../models/home');
 const authenticate = require('../authenticate');
+const cors = require('./cors');
 
 const homeRouter = express.Router();
 
 homeRouter.route('/')
-.get((req, res, next) => {
+.options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+.get(cors.cors, (req, res, next) => {
     Home.find()
     .then(homeItems => {
         res.statusCode = 200;
@@ -14,7 +16,7 @@ homeRouter.route('/')
     })
     .catch(err => next(err));
 })
-.post(authenticate.verifyUser, (req, res, next) => {
+.post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Home.create(req.body)
     .then(homeItem => {
         res.statusCode = 200;
@@ -23,11 +25,11 @@ homeRouter.route('/')
     })
     .catch(err => next(err));
 })
-.put(authenticate.verifyUser, (req, res) => {
+.put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /home');
 })
-.delete(authenticate.verifyUser, (req, res, next) => {
+.delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     Home.deleteMany()
     .then(response => {
         res.statusCode = 200;
